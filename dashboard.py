@@ -117,6 +117,7 @@ app = dash.Dash(
     external_stylesheets=[dbc.themes.SOLAR]
 
 )
+server = app.server 
 
 app.layout = html.Div([
     html.H3("Zumper Rent by Month Dashboard",style={'textAlign': 'center'}),
