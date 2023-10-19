@@ -11,7 +11,7 @@ import plotly.express as px
 
 df_imported = pd.read_csv('df_rents.csv')
 df_imported['Date'] = pd.to_datetime(df_imported['Date'],format='%Y-%m-%d')
-df_imported['City'] = df_imported['City'].astype(str)
+df_imported['City'] = df_imported['RegionName'].astype(str)
 
 #get state code last two of each city
 df_imported['state'] = df_imported['City'].str[-2:]
@@ -104,7 +104,7 @@ map_fig.add_annotation(dict(font=dict(color='white',size=8),
                                         x=.8,
                                         y=-0.12,
                                         showarrow=False,
-                                        text="Data provided by Zumper for 1Br Rents and updated weekly",
+                                        text="Data provided by Zillow and updated monthly",
                                         textangle=0,
                                         xanchor='left',
                                         xref="paper",
@@ -120,12 +120,12 @@ app = dash.Dash(
 server = app.server 
 
 app.layout = html.Div([
-    html.H3("Zumper Rent by Month Dashboard",style={'textAlign': 'center'}),
+    html.H3("Zillow Rent by Month Dashboard",style={'textAlign': 'center'}),
     html.H5("Are rents really coming down?",style={'textAlign': 'center'}),
     dcc.Graph(figure=map_fig),
     dcc.Checklist(
         id="checklist",
-        options=["Northeast", "Texas", "South", "West", "Mid-West"],
+        options=["Northeast", "Texas", "Southeast", "West", "Midwest"],
         value=["Texas"],
         inline=True,
         labelStyle= {'margin-right':'5px'},
