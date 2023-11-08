@@ -8,8 +8,14 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash import Dash, dcc, html, Input, Output
 import plotly.express as px
+import matplotlib.cm as cm
 
 df_imported = pd.read_csv('df_rents.csv')
+
+
+#df_imported = pd.read_csv('zz_test.csv')
+
+
 df_imported['Date'] = pd.to_datetime(df_imported['Date'],format='%Y-%m-%d')
 df_imported['City'] = df_imported['RegionName'].astype(str)
 
@@ -113,13 +119,70 @@ map_fig.add_annotation(dict(font=dict(color='white',size=8),
 
 
 
+
+color_scale = ['#02b5e3', '#a2d0d4']
+
+# Create a colormap based on the color scale
+colormap = cm.colors.LinearSegmentedColormap.from_list('custom_colormap', color_scale)
+
+
+
+
+
+df_table = df_imported
+
+# Convert the 'Date' column to datetime
+df_table['Date'] = pd.to_datetime(df_table['Date'])
+
+# Find the maximum date
+max_date = df_table['Date'].max()
+
+# Filter the DataFrame to include only rows with the maximum date
+df_table = df_table[df_table['Date'] == max_date]
+
+
+df_table = df_table[['RegionName','Pct_Chg_12M_3M_Rolling_Average_Rents']]
+
+
+#filtered_df_table['Pct_Chg_12M_3M_Rolling_Average_Rents'] =(filtered_df_table['Pct_Chg_12M_3M_Rolling_Average_Rents'] * 100).round(2).astype(str) + "%"
+#filtered
+df_table = df_table.head(35)
+df_table = df_table.reset_index(drop=True)
+
+df_table = df_table.sort_values('Pct_Chg_12M_3M_Rolling_Average_Rents', ascending=False)
+
+
+
+
+# Normalize the values
+norm = cm.colors.Normalize(vmin=df_table['Pct_Chg_12M_3M_Rolling_Average_Rents'].min(),
+                           vmax=df_table['Pct_Chg_12M_3M_Rolling_Average_Rents'].max())
+
+# Convert values to colors based on the colormap
+colors = [cm.colors.rgb2hex(colormap(norm(value))) for value in df_table['Pct_Chg_12M_3M_Rolling_Average_Rents']]
+
+formatted_values = [f"{value:.2%}" for value in df_table['Pct_Chg_12M_3M_Rolling_Average_Rents']]
+
+# Create the table trace
+table_trace = go.Table(
+    header=dict(values=list(df_table.columns), fill_color='#02b5e3', align='center'),
+    cells=dict(
+        values=[df_table['RegionName'], formatted_values],
+        fill=dict(color=[colors, colors]),  # Same color for both columns
+        align='center'
+    )
+)
+
+
+
 app = dash.Dash(
     external_stylesheets=[dbc.themes.SOLAR]
 
 )
 server = app.server 
 
-app.layout = html.Div([
+app.layout = html.Div(
+    [
     html.H3("Zillow Rent by Month Dashboard",style={'textAlign': 'center'}),
     html.H5("Are rents really coming down?",style={'textAlign': 'center'}),
     dcc.Graph(figure=map_fig),
@@ -141,6 +204,20 @@ app.layout = html.Div([
     ),
     dcc.Graph(id="graph"),
     html.Br(),
+    html.H5("Top Rent Changes by City",style={'textAlign': 'center'}),
+    #dcc.Graph(figure=go.Figure(data=[table_trace])),
+
+
+    dcc.Graph(
+            figure=go.Figure(
+                data=[table_trace],
+                layout=go.Layout(
+                    plot_bgcolor='#004a5d',  # Set the plot background color to match SOLAR theme
+                    paper_bgcolor='#004a5d',  # Set the paper background color to match SOLAR theme
+                    font=dict(color='#ffffff')  # Set the font color to match SOLAR theme
+                )
+            )
+        ),
     html.A("Dashboard made by Danny Russell", href='https://www.linkedin.com/in/daniel-russell-iv-cfa-15681114/', target="_blank")
 ])
 
